@@ -1,0 +1,2 @@
+"""InsightPilot backend package."""
+
