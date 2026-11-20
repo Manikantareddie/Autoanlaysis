@@ -9,7 +9,7 @@ class Settings(BaseSettings):
 
     app_name: str = "InsightPilot AI"
     app_env: str = "development"
-    cors_origins: str = "http://localhost:5173"
+    cors_origins: str = "https://autoanlaysis.vercel.app,http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000"
     max_upload_size_mb: int = 25
     max_dataset_rows: int = 100_000
     storage_dir: Path = Path(__file__).resolve().parents[3] / "storage" / "datasets"

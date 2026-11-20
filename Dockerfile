@@ -1,11 +1,17 @@
 # Multi-stage / optimized production Dockerfile for InsightPilot AI Backend on Render
 FROM python:3.11-slim-bookworm
 
-# Prevent Python from writing .pyc files and enable unbuffered output for live Render logs
+# Prevent Python from writing .pyc files, enable unbuffered logs, and constrain thread memory on Render
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app/backend \
-    PORT=8000
+    PORT=8000 \
+    OMP_NUM_THREADS=1 \
+    MKL_NUM_THREADS=1 \
+    OPENBLAS_NUM_THREADS=1 \
+    VECLIB_MAXIMUM_THREADS=1 \
+    NUMEXPR_NUM_THREADS=1 \
+    TOKENIZERS_PARALLELISM=false
 
 # Install minimal OS dependencies required by DuckDB, FAISS, and PyTorch OpenMP (libgomp1)
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -35,5 +41,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
     CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
 
-# Start Uvicorn bound to 0.0.0.0 and dynamic $PORT
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --app-dir /app/backend"]
+# Start Uvicorn bound to 0.0.0.0 and dynamic $PORT with single worker for low-memory environments
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --app-dir /app/backend --workers 1 --timeout-keep-alive 30"]
