@@ -36,6 +36,12 @@ app.include_router(datasets_router)
 app.include_router(analyses_router)
 
 
+@app.get("/", tags=["system"])
+@app.head("/", tags=["system"])
+def root() -> dict[str, str]:
+    return {"status": "ok", "service": "insightpilot-api", "docs": "/docs", "health": "/health"}
+
+
 @app.get("/health", tags=["system"])
 def health_check() -> dict[str, str]:
     """Lightweight liveness endpoint; no database dependency in Phase 1."""
