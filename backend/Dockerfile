@@ -20,10 +20,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Install lightweight CPU-only PyTorch first to stay within Render memory limits
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
-
+# Install lightweight dependencies directly (no PyTorch/transformers bloat)
+RUN pip install --no-cache-dir --upgrade pip
 COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 

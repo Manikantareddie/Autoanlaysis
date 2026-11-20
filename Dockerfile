@@ -22,11 +22,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Step 1: Install lightweight CPU-only PyTorch first to stay well within Render memory limits
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
-
-# Step 2: Install remaining application and RAG dependencies
+# Install lightweight dependencies directly (no PyTorch/transformers bloat)
+RUN pip install --no-cache-dir --upgrade pip
 COPY backend/requirements.txt /app/backend/requirements.txt
 RUN pip install --no-cache-dir -r /app/backend/requirements.txt
 

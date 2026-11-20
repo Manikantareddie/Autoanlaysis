@@ -10,11 +10,39 @@ from typing import Any
 
 import numpy as np
 
+from app.core.config import get_settings
+
 logger = logging.getLogger(__name__)
 
-# Global embedding model cache
-_EMBEDDING_MODEL = None
+# Global embedding settings
 _VECTOR_DIM = 384
+
+
+def get_gemini_embeddings(texts: list[str]) -> np.ndarray | None:
+    """Lightweight external embedding via Gemini API without loading models locally."""
+    settings = get_settings()
+    if not settings.gemini_api_key:
+        return None
+    try:
+        from google import genai
+        client = genai.Client(api_key=settings.gemini_api_key)
+        all_vecs = []
+        for i in range(0, len(texts), 50):
+            batch = texts[i : i + 50]
+            resp = client.models.embed_content(
+                model="text-embedding-004",
+                contents=batch,
+            )
+            for emb in getattr(resp, "embeddings", []):
+                all_vecs.append(emb.values)
+        if all_vecs:
+            arr = np.array(all_vecs, dtype=np.float32)
+            norms = np.linalg.norm(arr, axis=1, keepdims=True)
+            norms[norms == 0] = 1.0
+            return arr / norms
+    except Exception as e:
+        logger.warning("Gemini embedding API call failed: %s, falling back to deterministic projection", e)
+    return None
 
 
 def get_token_count(text: str) -> int:
@@ -51,24 +79,25 @@ def deterministic_embedding(text: str, dim: int = _VECTOR_DIM) -> np.ndarray:
 
 
 def get_embeddings(texts: list[str]) -> np.ndarray:
-    """Batch embed text strings into normalized float32 vectors."""
-    global _EMBEDDING_MODEL
+    """
+    Batch embed text strings into normalized float32 vectors.
+    Optimized for low-memory cloud runtimes (e.g., Render 512MB RAM):
+    Uses external Gemini embeddings if configured, or fast deterministic hash-projection.
+    Never attempts to download Hugging Face models or load PyTorch locally.
+    """
     if not texts:
         return np.zeros((0, _VECTOR_DIM), dtype=np.float32)
 
-    try:
-        if _EMBEDDING_MODEL is None:
-            from sentence_transformers import SentenceTransformer
-            try:
-                _EMBEDDING_MODEL = SentenceTransformer("all-MiniLM-L6-v2", local_files_only=True)
-            except Exception:
-                _EMBEDDING_MODEL = SentenceTransformer("all-MiniLM-L6-v2")
-        embeddings = _EMBEDDING_MODEL.encode(texts, batch_size=32, show_progress_bar=False, normalize_embeddings=True)
-        return np.array(embeddings, dtype=np.float32)
-    except Exception as e:
-        logger.warning("SentenceTransformer unavailable or offline (%s), using deterministic embedding vectorizer.", e)
-        vecs = [deterministic_embedding(t) for t in texts]
-        return np.array(vecs, dtype=np.float32)
+    settings = get_settings()
+    provider = getattr(settings, "embedding_provider", "deterministic").lower()
+
+    if provider == "gemini":
+        gemini_vecs = get_gemini_embeddings(texts)
+        if gemini_vecs is not None:
+            return gemini_vecs
+
+    vecs = [deterministic_embedding(t, dim=_VECTOR_DIM) for t in texts]
+    return np.array(vecs, dtype=np.float32)
 
 
 class VectorIndex:

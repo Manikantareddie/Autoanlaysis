@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     max_dataset_rows: int = 100_000
     storage_dir: Path = Path(__file__).resolve().parents[3] / "storage" / "datasets"
     database_url: str = "sqlite:///./insightpilot.db"
+    embedding_provider: str = "deterministic"
     llm_provider: str = "nvidia"
     nvidia_api_key: str = ""
     nvidia_base_url: str = "https://integrate.api.nvidia.com/v1"

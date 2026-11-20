@@ -5,7 +5,7 @@ import duckdb
 
 
 def compute_dataset_dashboard(duckdb_path: Path) -> dict:
-    conn = duckdb.connect(str(duckdb_path), read_only=True)
+    conn = duckdb.connect(str(duckdb_path), read_only=True, config={"threads": "1", "memory_limit": "128MB"})
     try:
         desc = conn.execute("DESCRIBE dataset").fetchall()
         cols = {row[0]: row[1].upper() for row in desc}

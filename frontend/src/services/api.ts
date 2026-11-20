@@ -172,7 +172,7 @@ const API_BASE_URL = getApiBaseUrl();
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 45_000,
+  timeout: 90_000,
 });
 
 export async function getHealth(): Promise<HealthResponse> {
@@ -186,7 +186,7 @@ export async function listDatasets(): Promise<DatasetSummary[]> {
 export async function uploadDataset(file: File): Promise<DatasetDetail> {
   const form = new FormData();
   form.append("file", file);
-  return (await api.post<DatasetDetail>("/api/v1/datasets", form)).data;
+  return (await api.post<DatasetDetail>("/api/v1/datasets", form, { timeout: 120_000 })).data;
 }
 
 export async function getDataset(datasetId: string): Promise<DatasetDetail> {
@@ -207,11 +207,15 @@ export async function runAnalysis(
   previousAnalysisId?: string
 ): Promise<AnalysisResult> {
   return (
-    await api.post<AnalysisResult>("/api/v1/analyses/run", {
-      dataset_id: datasetId,
-      question,
-      previous_analysis_id: previousAnalysisId,
-    })
+    await api.post<AnalysisResult>(
+      "/api/v1/analyses/run",
+      {
+        dataset_id: datasetId,
+        question,
+        previous_analysis_id: previousAnalysisId,
+      },
+      { timeout: 120_000 }
+    )
   ).data;
 }
 

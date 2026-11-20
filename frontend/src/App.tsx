@@ -63,9 +63,30 @@ interface ConversationTurn {
 
 function friendlyError(error: unknown): string {
   if (axios.isAxiosError(error)) {
-    return typeof error.response?.data?.detail === "string"
-      ? error.response.data.detail
-      : "The request could not be completed. Please check your data or try again.";
+    if (error.code === "ECONNABORTED" || error.message?.toLowerCase().includes("timeout")) {
+      return "The request timed out while processing. Please try again or check dataset size.";
+    }
+    if (!error.response) {
+      return "Unable to connect to the backend server. The service may be starting up or temporarily offline.";
+    }
+    const status = error.response.status;
+    const detail = error.response.data?.detail;
+    if (typeof detail === "string") {
+      return detail;
+    }
+    if (status === 413) {
+      return "The uploaded file exceeds the maximum allowed size (25 MB).";
+    }
+    if (status === 422) {
+      return "The dataset format is invalid or could not be parsed as a valid CSV.";
+    }
+    if (status >= 500) {
+      return `Server error (${status}): The analytics service encountered an issue. Please try again.`;
+    }
+    return "The request could not be completed. Please check your data or try again.";
+  }
+  if (error instanceof Error) {
+    return error.message;
   }
   return "An unexpected error occurred.";
 }
