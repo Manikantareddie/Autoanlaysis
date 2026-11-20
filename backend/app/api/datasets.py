@@ -21,6 +21,7 @@ from app.services.dashboard import compute_dataset_dashboard
 from app.services.dataset_storage import clean_filename, persist_csv
 from app.services.duckdb_store import create_dataset_database
 from app.services.profiler import preview_csv, profile_csv
+from app.rag.indexer import DatasetRagIndexer
 
 router = APIRouter(prefix="/api/v1/datasets", tags=["datasets"])
 
@@ -70,6 +71,12 @@ async def upload_dataset(file: UploadFile = File(...), session: Session = Depend
         session.add(dataset)
         session.commit()
         session.refresh(dataset)
+
+        try:
+            indexer = DatasetRagIndexer(dataset_id=dataset_id, csv_path=csv_path)
+            indexer.build_index(profile=profile, content_sha256=digest)
+        except Exception:
+            pass
     except HTTPException:
         shutil.rmtree(dataset_dir, ignore_errors=True)
         raise

@@ -27,6 +27,14 @@ class BusinessReport(BaseModel):
     business_recommendations: list[str] = Field(default_factory=list, max_length=10)
     data_caveats: list[str] = Field(default_factory=list, max_length=10)
 
+class RagEvidenceItem(BaseModel):
+    chunk_id: str
+    chunk_type: str = "record_text"  # "schema", "column", "categorical", "record_text"
+    score: float
+    text: str
+    row_id: int | None = None
+    column_name: str | None = None
+
 class AnalysisResult(BaseModel):
     analysis_id: str
     plan: AnalysisPlan
@@ -35,4 +43,6 @@ class AnalysisResult(BaseModel):
     rows: list[list[object]]
     row_count: int
     report: BusinessReport | None = None
+    routing_path: str = "structured_analytics"  # "structured_analytics" | "semantic_rag" | "hybrid"
+    rag_evidence: list[RagEvidenceItem] = Field(default_factory=list)
 

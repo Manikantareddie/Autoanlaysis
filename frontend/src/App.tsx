@@ -699,9 +699,20 @@ export default function App() {
                           {/* Direct Executive Summary */}
                           {turn.result.report && (
                             <div className="ai-executive-summary">
-                              <div className="summary-chip">
-                                <Sparkles size={13} />
-                                <span>Verified Answer</span>
+                              <div className="summary-chip-row">
+                                <div className="summary-chip">
+                                  <Sparkles size={13} />
+                                  <span>Verified Answer</span>
+                                </div>
+                                {turn.result.routing_path && (
+                                  <span className={`route-badge ${turn.result.routing_path}`}>
+                                    {turn.result.routing_path === "semantic_rag"
+                                      ? "🔍 Semantic Search"
+                                      : turn.result.routing_path === "hybrid"
+                                      ? "⚡🔍 Hybrid RAG"
+                                      : "⚡ SQL Analytics"}
+                                  </span>
+                                )}
                               </div>
                               <p className="summary-prose">{turn.result.report.executive_summary}</p>
                             </div>
@@ -780,6 +791,33 @@ export default function App() {
                                   </BarChart>
                                 )}
                               </ResponsiveContainer>
+                            </div>
+                          )}
+
+                          {/* RAG Retrieved Evidence & Citations */}
+                          {turn.result.rag_evidence && turn.result.rag_evidence.length > 0 && (
+                            <div className="rag-evidence-card">
+                              <div className="evidence-header">
+                                <Search size={13} className="evidence-icon" />
+                                <span className="evidence-title">
+                                  Retrieved Evidence ({turn.result.rag_evidence.length} sources matched in vector index)
+                                </span>
+                              </div>
+                              <div className="evidence-grid">
+                                {turn.result.rag_evidence.slice(0, 6).map((ev, ei) => (
+                                  <div key={ei} className="evidence-item">
+                                    <div className="evidence-meta">
+                                      <span className="evidence-ref">
+                                        {ev.row_id ? `Record #${ev.row_id}` : ev.column_name ? `Col: ${ev.column_name}` : "Schema context"}
+                                      </span>
+                                      <span className="evidence-score">
+                                        {(ev.score * 100).toFixed(0)}% match
+                                      </span>
+                                    </div>
+                                    <p className="evidence-text">{ev.text}</p>
+                                  </div>
+                                ))}
+                              </div>
                             </div>
                           )}
 

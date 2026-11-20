@@ -71,6 +71,15 @@ export type BusinessReport = {
   data_caveats: string[];
 };
 
+export type RagEvidenceItem = {
+  chunk_id: string;
+  chunk_type: string;
+  score: number;
+  text: string;
+  row_id?: number | null;
+  column_name?: string | null;
+};
+
 export type AnalysisResult = {
   analysis_id: string;
   plan: AnalysisPlan;
@@ -79,6 +88,8 @@ export type AnalysisResult = {
   rows: (string | number | boolean | null)[][];
   row_count: number;
   report?: BusinessReport | null;
+  routing_path?: "structured_analytics" | "semantic_rag" | "hybrid" | string;
+  rag_evidence?: RagEvidenceItem[];
 };
 
 export type ExecutionTrace = {
