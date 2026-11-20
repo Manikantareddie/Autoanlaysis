@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     max_upload_size_mb: int = 25
     max_dataset_rows: int = 100_000
     storage_dir: Path = Path(__file__).resolve().parents[3] / "storage" / "datasets"
-    database_url: str = "postgresql+psycopg://insightpilot:insightpilot@localhost:5432/insightpilot"
+    database_url: str = "sqlite:///./insightpilot.db"
     llm_provider: str = "nvidia"
     nvidia_api_key: str = ""
     nvidia_base_url: str = "https://integrate.api.nvidia.com/v1"

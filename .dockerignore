@@ -1,0 +1,15 @@
+.git
+.gitignore
+.venv
+node_modules
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.pytest-tmp
+frontend
+docs
+.vscode
+*.log
+insightpilot.db
